@@ -1,0 +1,38 @@
+- hosts: ws
+  gather_facts: false
+  vars:
+    title: weed
+    datapath: /var/seaweed/data
+    binpath: /usr/bin
+  tasks:
+    # - unarchive:
+    #     src: https://github.com/chrislusf/seaweedfs/releases/download/1.23/linux_amd64.tar.gz
+    #     dest: "{{ binpath }}"
+    #     remote_src: yes
+    - name: copy .service
+      copy:
+        content: |
+          [Unit]
+          After=network.target
+          PartOf=seaweed.target
+          [Service]
+          User=root
+          Group=root
+          WorkingDirectory={{ binpath }}
+          ExecStart={{ binpath }}/{{ title }} server -ip=127.0.0.1 -master.port=9333 -volume.port=8081 -dir={{ datapath }}
+          KillMode=process
+          Restart=always
+          RestartSec=30
+          [Install]
+          WantedBy=multi-user.target
+        remote_src: false
+        dest:  /lib/systemd/system/{{ title }}.service
+        owner: root
+        group: root
+        mode: 0444
+    - name: Creates directory
+      file:
+        path: "{{ datapath }}"
+        state: directory
+    - name: config service
+      systemd: daemon_reload=yes name={{ title }} state=restarted enabled=yes

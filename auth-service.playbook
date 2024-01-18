@@ -1,0 +1,31 @@
+- hosts: ws
+  become: yes
+  vars:
+    title: "rmq-authz"
+  tasks:
+    - name: copy .service
+      copy:
+        content: |
+          [Unit]
+          After=network.target
+          PartOf=amqp-bot.target
+          [Service]
+          User=root
+          Group=root
+          WorkingDirectory=/usr/bin/amqp-bot
+          Environment='AMQP_URL=amqp://authbot:authbot@localhost:5672/'
+          Environment='CLICKHOUSE_DATASOURCE=tcp://localhost:9000?username=default&database=paker'
+          ExecStart=/usr/bin/amqp-bot/{{ title }} -amqp-uri=${AMQP_URL} -ch-data-source=${CLICKHOUSE_DATASOURCE}
+          KillMode=process
+          Restart=always
+          RestartSec=9
+          [Install]
+          WantedBy=multi-user.target
+        dest:  /lib/systemd/system/{{ title }}.service
+        owner: root
+        group: root
+        mode: 0444
+    - name: systemd daemon_reload
+      systemd: daemon_reload=yes name={{ title }} state=restarted enabled=yes
+      
+

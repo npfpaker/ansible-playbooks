@@ -1,0 +1,29 @@
+- hosts: ws
+  become: yes
+  vars:
+    title: amqp-gift-group
+  tasks:
+    - name: copy .service
+      copy:
+        content: |
+          [Unit]
+          After=network.target
+          PartOf=amqp-bot.target
+          [Service]
+          User=root
+          Group=root
+          WorkingDirectory=/usr/bin/amqp-bot
+          ExecStart=/usr/bin/amqp-bot/{{ title }} -dsn=builtin:///var/reindex/gift_group -amqp-uri=amqp://bot:bot@localhost:5672/
+          KillMode=process
+          Restart=always
+          RestartSec=30
+          [Install]
+          WantedBy=multi-user.target
+        dest:  /lib/systemd/system/{{ title }}.service
+        owner: root
+        group: root
+        mode: 0444
+    - name: systemd daemon_reload
+      systemd: daemon_reload=yes name={{ title }} state=restarted enabled=yes
+      
+

@@ -1,0 +1,7 @@
+- hosts: ws
+  gather_facts: false
+  tasks:
+    - name: Enables plugins
+      community.rabbitmq.rabbitmq_plugin:
+        names: rabbitmq_web_dispatch,rabbitmq_management,rabbitmq_stomp,rabbitmq_web_stomp
+        state: enabled
